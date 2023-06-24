@@ -1,0 +1,6 @@
+{
+  "watch": ["./"],
+  "ext": ".ts,.js",
+  "ignore": ["garbage/**", ".wwebjs_auth/**", ".wwebjs_cache/**"],
+  "exec": "ts-node app.ts"
+}
