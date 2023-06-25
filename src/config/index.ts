@@ -38,9 +38,9 @@ const configClient = async (client: Client) => {
 
         console.log(`send message the person info is : ${pushname} and message is `, chatInfo);
 
-        await message.react('👍');
+        // await message.react('👍');
 
-        if (message.hasMedia && !message.location && (message.type === 'sticker' || message.type === 'image')) {
+        if (!message.location && (message.type === 'sticker' || message.type === 'image')) {
           // ? recieve only sticker or images
 
           // ? download media and type
@@ -49,35 +49,40 @@ const configClient = async (client: Client) => {
           const decodeData = Buffer.from(downloadMedia, 'base64');
 
           const mediaType = await (await message.downloadMedia())?.mimetype.split('/')[1];
+          console.log('media type :: ', mediaType);
+
+          const writeFile = await path.resolve(__dirname, `../../garbage/stickers/${message.id.id}.${mediaType}`);
+
+          console.log('full path : ', writeFile);
 
           // ? store to the media
-          await fs.writeFile(
-            path.resolve(__dirname, `../../garbage/stickers/${message.id.id}.${mediaType}`),
-            decodeData,
-            err => {
-              if (!err) {
-                console.log('File Saved Successfully ....!  ');
-              }
+          await fs.writeFile(writeFile, decodeData, err => {
+            if (!err) {
+              console.log('File Saved Successfully ....!  ');
             }
-          );
+          });
 
           await client.sendMessage(from, 'wait for a moment ... !');
+
           await new Promise(resolve => setTimeout(resolve, 2000));
 
-          // ? read the file who's send the file return to the clinet
-          const filepath = await fs.readFileSync(
-            path.resolve(__dirname, `../../garbage/stickers/${message.id.id}.${mediaType}`)
-          );
+          const SendtoUser = await path.resolve(__dirname, `../../garbage/stickers/${message.id.id}.${mediaType}`);
+
+          console.log('send user data : ', SendtoUser);
+
+          // ? read the file who's send the file and save after return to the clinet
+          const filepath = await fs.readFileSync(SendtoUser);
 
           // ? return to encoded
           const encoded = Buffer.from(filepath).toString('base64');
 
-          // ? create the media tto send the client
+          // ? create the media to send the client
           const media = new MessageMedia((await message.downloadMedia()).mimetype, downloadMedia);
 
           await client.sendMessage(from, encoded, {
             media,
-            sendMediaAsSticker: true
+            sendMediaAsSticker: true,
+            caption: 'this is picture'
           });
         }
 
